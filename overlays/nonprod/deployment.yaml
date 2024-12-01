@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: helloworld-container
-          image: lycheesgaseous/:develop
+          image: lycheesgaseous/helloworld:develop-${COMMIT_ID_SHORT}
           ports:
             - containerPort: 8080
       imagePullSecrets:
