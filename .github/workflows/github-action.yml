@@ -3,16 +3,20 @@ name: Build, Push Docker Image
 on:
   push:
     branches:
-      - main
+      - develop
     # tags:
     #   - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -28,22 +32,21 @@ jobs:
       - name: Build and Push Docker image with commit ID and branch or tag
         env:
           COMMIT_ID: ${{ github.sha }}
-          REF_TYPE: ${{ github.ref_type }}
-          REF_NAME: ${{ github.ref_name }}
           APP_NAME: ${{ vars.APP_NAME }}
         run: |
           COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT}
 
       - name: Update Nonprod deployment.yaml with new image tag
         env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          APP_NAME: ${{ vars.APP_NAME }}
         run: |
           COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          sed -i 's|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}|' ./overlays/nonprod/deployment.yaml
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          sed -i "s|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT}|" ./overlays/nonprod/deployment.yaml
+          git config --global user.name "lychees40"
+          git config --global user.email "lychees40@users.noreply.github.com"
           git add ./overlays/nonprod/deployment.yaml
-          git commit -m "Update deployment.yaml with image tag ${{ env.REF_NAME }}-${COMMIT_ID_SHORT}}"
-          git push --set-upstream https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
+          git commit -m "Update deployment.yaml with image tag ${{ github.ref_name }}-${COMMIT_ID_SHORT}"
+          git push

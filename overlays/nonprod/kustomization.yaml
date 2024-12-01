@@ -6,3 +6,4 @@ resources:
 patches:
   - path: certificate.yaml
   - path: ingress.yaml
+  - path: deployment.yaml
