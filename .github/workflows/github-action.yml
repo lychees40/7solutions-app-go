@@ -29,5 +29,6 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
           APP_NAME: ${{ vars.APP_NAME }}
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.BRANCH_NAME }}-${{ env.COMMIT_ID }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.BRANCH_NAME }}-${{ env.COMMIT_ID }}
+          COMMIT_ID_SHORT=$(echo ${{ github.sha }} | cut -c1-7)
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.BRANCH_NAME }}-${COMMIT_ID_SHORT}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.BRANCH_NAME }}-${COMMIT_ID_SHORT}
