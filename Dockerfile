@@ -17,6 +17,9 @@ RUN go build -o main .
 # Stage 2: Create a smaller image to run the application
 FROM alpine:latest
 
+# Install necessary packages
+RUN apk add --no-cache ca-certificates
+
 # Set the working directory inside the container
 WORKDIR /app
 
