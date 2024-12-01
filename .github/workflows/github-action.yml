@@ -10,9 +10,13 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -46,4 +50,4 @@ jobs:
           git config --global user.email "lychees40@users.noreply.github.com"
           git add ./overlays/nonprod/deployment.yaml
           git commit -m "Update deployment.yaml with image tag ${{ env.REF_NAME }}-${COMMIT_ID_SHORT}}"
-          git push --set-upstream https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
+          git push
