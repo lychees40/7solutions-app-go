@@ -1,0 +1,7 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: helloworld-certificate
+spec:
+  domains:
+    - go.nonprod.chxwe.com

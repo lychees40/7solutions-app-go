@@ -1,0 +1,17 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: helloworld-backend-config
+  labels:
+    app: helloworld
+spec:
+  connectionDraining:
+    drainingTimeoutSec: 30
+  healthCheck:
+    checkIntervalSec: 30
+    healthyThreshold: 3
+    port: 8080
+    requestPath: /
+    timeoutSec: 10
+    type: HTTP
+    unhealthyThreshold: 3

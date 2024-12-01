@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment
+  labels:
+    app: helloworld
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+        - name: helloworld-container
+          image: lycheesgaseous/helloworld:v1.0.1
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: dockerhub-secret

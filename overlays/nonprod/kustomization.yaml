@@ -1,0 +1,8 @@
+namespace: helloworld
+
+resources:
+  - ../../base/
+
+patches:
+  - path: certificate.yaml
+  - path: ingress.yaml

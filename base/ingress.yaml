@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    external-dns.alpha.kubernetes.io/zone: public
+    ingressClassName: gce
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: helloworld-certificate
+    networking.gke.io/v1beta1.FrontendConfig: helloworld-security-config
+    networking.gke.io/v1beta1.GlobalBackendConfig: helloworld-backend-config
+  name: basic-ingress
+spec:
+  rules:
+    - host: helloworld.bar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: helloworld-service
+                port:
+                  number: 80
