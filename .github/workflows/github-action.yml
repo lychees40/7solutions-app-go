@@ -46,4 +46,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add ./overlays/nonprod/deployment.yaml
           git commit -m "Update deployment.yaml with image tag ${{ env.REF_NAME }}-${COMMIT_ID_SHORT}}"
-          git push --set-upstream https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
+          git push
