@@ -3,9 +3,9 @@ name: Build, Push Docker Image
 on:
   push:
     branches:
-      - develop
-    tags:
-      - "v[1]+.[0-9]+.[0-9]+"
+      - main
+    # tags:
+    #   - "v[1]+.[0-9]+.[0-9]+"
 
 jobs:
   build-and-push:
@@ -33,10 +33,17 @@ jobs:
           APP_NAME: ${{ vars.APP_NAME }}
         run: |
           COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          if [ "${{ env.REF_TYPE }}" = "tag" ]; then
-            docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }} .
-            docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}
-          else
-            docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT} .
-            docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT}
-          fi
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ env.REF_NAME }}-${COMMIT_ID_SHORT}
+
+      - name: Update Nonprod deployment.yaml with new image tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          BRANCH_NAME=update-deployment-${{ github.ref_name }}
+          git checkout -b $BRANCH_NAME
+          sed -i 's|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}|' ./overlays/nonprod/deployment.yaml
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./overlays/nonprod/deployment.yaml
+          git commit -m "Update deployment.yaml with image tag ${{ github.ref_name }}"
+          git push --set-upstream origin $BRANCH_NAME
