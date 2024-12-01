@@ -2,23 +2,19 @@
 
 ## Overview
 
-This project sets up the infrastructure for the 7 Solutions assignment, including networking and a GKE private cluster with Argo CD.
+This is a simple Golang application and kustomize templates to deploy on GCP
 
 ## Prerequisites
 
 - Docker installed on your local machine.
-- Docker Hub account with repository created.
-- Docker Hub credentials added to GitHub repository secrets (Write and Read Permission):
+- Docker Hub account with a repository created.
+- Docker Hub credentials added to GitHub repository secrets (with Write and Read permissions):
   - `DOCKER_USERNAME`
   - `DOCKER_PASSWORD`
 
 ## GitHub Actions Workflow
 
 This repository uses GitHub Actions to automate the build and push process for Docker images. The workflow is triggered on pushes to the `develop` branch and on tags matching the pattern `v[1]+.[0-9]+.[0-9]+`.
-
-### Workflow Steps
-
-1. **Checkout repository**: This step checks out the repository to the GitHub Actions runner.
 
 ## Acknowledgements
 
