@@ -1,0 +1,12 @@
+project: default
+source:
+  repoURL: https://github.com/lychees40/7solutions-app-go.git
+  path: overlays/nonprod
+  targetRevision: develop
+destination:
+  server: https://kubernetes.default.svc
+  namespace: helloworld
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
