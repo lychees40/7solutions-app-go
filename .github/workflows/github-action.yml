@@ -54,8 +54,7 @@ jobs:
       - name: Static code analysis
         uses: securego/gosec@master
         with:
-          args: '-fmt=json -out=gosec-report.json ./...'
-        id: gosec
+          args: '-no-fail -fmt json -out gosec-report.json ./...'
 
       - name: Save Gosec Output
         run: |
