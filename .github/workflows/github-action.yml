@@ -55,6 +55,7 @@ jobs:
         uses: securego/gosec@master
         with:
           args: '-no-fail -fmt json -out gosec-report.json ./...'
+        id: gosec
 
       - name: Save Gosec Output
         run: |
@@ -69,7 +70,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/{{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
@@ -88,6 +89,30 @@ jobs:
           echo "$trivy_output" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      # Extract summaries from the reports
+      - name: Extract Trivy Summary
+        id: trivy_summary
+        run: |
+          echo "Extracting Trivy summary..."
+          CRITICAL=$(jq '[.Results[].Vulnerabilities[] | select(.Severity=="CRITICAL")] | length' trivy-report.json)
+          HIGH=$(jq '[.Results[].Vulnerabilities[] | select(.Severity=="HIGH")] | length' trivy-report.json)
+          echo "TRIVY_CRITICAL=${CRITICAL}" >> $GITHUB_ENV
+          echo "TRIVY_HIGH=${HIGH}" >> $GITHUB_ENV
+
+      - name: Extract Gosec Summary
+        id: gosec_summary
+        run: |
+          echo "Extracting Gosec summary..."
+          GOSEC_ISSUES=$(jq 'length' gosec-report.json)
+          echo "GOSEC_ISSUES=${GOSEC_ISSUES}" >> $GITHUB_ENV
+
+      - name: Extract Govulncheck Summary
+        id: govulncheck_summary
+        run: |
+          echo "Extracting Govulncheck summary..."
+          GOVULNCHECK_VULNS=$(jq 'length' govulncheck-output.json)
+          echo "GOVULNCHECK_VULNS=${GOVULNCHECK_VULNS}" >> $GITHUB_ENV
+
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
@@ -97,15 +122,22 @@ jobs:
         run: |
           COMMIT_MSG="Update deployment.yaml with image tag ${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
           
-          Trivy Results:
-          $TRIVY_OUTPUT
+          **Security Scan Summary:**
 
-          Gosec Results:
-          $GOSEC_OUTPUT
+          - **Trivy:**
+            - Critical Vulnerabilities: $TRIVY_CRITICAL
+            - High Vulnerabilities: $TRIVY_HIGH
 
-          Govulncheck Results:
-          $GOVULNCHECK_OUTPUT"
-          echo "::set-output name=msg::$COMMIT_MSG"
+          - **Gosec:**
+            - Total Issues: $GOSEC_ISSUES
+
+          - **Govulncheck:**
+            - Total Vulnerabilities: $GOVULNCHECK_VULNS
+          "
+          # Use GITHUB_OUTPUT for setting outputs
+          echo "msg<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Update Nonprod deployment.yaml with new image tag
         env:
