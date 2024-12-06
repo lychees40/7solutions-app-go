@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: helloworld-container
-          image: lycheesgaseous/helloworld:develop-8830642
+          image: lycheesgaseous/helloworld:develop-6d82f83
           ports:
             - containerPort: 8080
           securityContext:
