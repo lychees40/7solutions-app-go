@@ -2,7 +2,7 @@ project: default
 source:
   repoURL: https://github.com/lychees40/7solutions-app-go.git
   path: overlays/nonprod
-  targetRevision: develop
+  targetRevision: main
 destination:
   server: https://kubernetes.default.svc
   namespace: helloworld
