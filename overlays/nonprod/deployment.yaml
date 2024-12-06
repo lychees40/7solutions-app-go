@@ -16,8 +16,12 @@ spec:
     spec:
       containers:
         - name: helloworld-container
-          image: lycheesgaseous/helloworld:develop-c805689
+          image: lycheesgaseous/helloworld:develop-1dafb03
           ports:
             - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
       imagePullSecrets:
         - name: dockerhub-secret
