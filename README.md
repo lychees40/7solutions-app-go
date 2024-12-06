@@ -1,8 +1,7 @@
 # 7solutions-app-go
-
 ## Overview
 
-This is a simple Golang application and kustomize templates to deploy on GCP
+This is a simple Golang application with kustomize templates to deploy on GCP.
 
 ## Prerequisites
 
@@ -27,7 +26,7 @@ To ensure the security of the application, the following steps are integrated in
   - name: govulncheck check
     uses: golang/govulncheck-action@v1
     with:
-      go-version-input: 1.21
+      go-version-input: 1.22
       go-package: ./...
   ```
 
@@ -40,8 +39,23 @@ To ensure the security of the application, the following steps are integrated in
     with:
       args: ./...
   ```
+
+### Container Vulnerability Scanning
+
+- **Trivy**: This step uses the `aquasecurity/trivy-action@0.28.0` to scan the Docker image for vulnerabilities.
+  ```yaml
+  - name: Run Trivy vulnerability scanner
+    uses: aquasecurity/trivy-action@0.28.0
+    with:
+      image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
+      format: 'table'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      severity: 'CRITICAL,HIGH'
+  ```
+
 ## Acknowledgements
 
-
 - The CI step for compiling the Go application is handled during the Docker multi-stage build process.
-- Now `govulncheck` and `gosec` run only during build time to check for vulnerabilities and security issues. While this helps catch issues early, we recommend enhancing security by also incorporating runtime security features. For example, using Google Kubernetes Engine (GKE) features like `security_posture_mode` and `security_posture_vulnerability_mode` can help monitor and enforce security policies during runtime. Additionally, any vulnerabilities detected at runtime should trigger a feedback loop back to the CI pipeline to ensure continuous improvement and security.
+- Now `govulncheck`, `gosec`, `trivy` run only during build time to check for vulnerabilities and security issues. While this helps catch issues early, we recommend enhancing security by also incorporating runtime security features. For example, using Google Kubernetes Engine (GKE) features like `security_posture_mode` and `security_posture_vulnerability_mode` can help monitor and enforce security policies during runtime. Additionally, any vulnerabilities detected at runtime should trigger a feedback loop back to the CI pipeline to ensure continuous improvement and security.

@@ -1,12 +1,18 @@
-project: default
-source:
-  repoURL: https://github.com/lychees40/7solutions-app-go.git
-  path: overlays/nonprod
-  targetRevision: main
-destination:
-  server: https://kubernetes.default.svc
-  namespace: helloworld
-syncPolicy:
-  automated:
-    prune: true
-    selfHeal: true
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: 7solutions-app-go
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/lychees40/7solutions-app-go.git
+    path: overlays/nonprod
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: helloworld
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
