@@ -35,16 +35,32 @@ jobs:
       
       ## Can run in docker build as well we split better organization of steps ##
       ## For support more features like report, hook, conditional in CI/CD ##
-      - name: Dependency check (Result will false cause the are no dependencies right now)
+      - name: Dependency check (Result will false cause there are no dependencies right now)
         uses: golang/govulncheck-action@v1
         with:
           go-version-input: 1.22
           go-package: ./...
+        id: govulncheck
+
+      - name: Save Govulncheck Output
+        run: |
+          govuln_output=$(cat govulncheck-output.json)
+          echo "GOVULNCHECK_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$govuln_output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Static code analysis
         uses: securego/gosec@master
         with:
           args: ./...
+        id: gosec
+
+      - name: Save Gosec Output
+        run: |
+          gosec_output=$(cat gosec-report.json)
+          echo "GOSEC_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$gosec_output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Set COMMIT_ID_SHORT
         id: vars
@@ -52,29 +68,52 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/{{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
+          format: 'json'
+          output: trivy-report.json
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+        id: trivy
+
+      - name: Save Trivy Output
+        run: |
+          trivy_output=$(cat trivy-report.json)
+          echo "TRIVY_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$trivy_output" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
 
+      - name: Create Commit Message
+        id: commit_message
+        run: |
+          COMMIT_MSG="Update deployment.yaml with image tag ${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
+          
+          Trivy Results:
+          $TRIVY_OUTPUT
+
+          Gosec Results:
+          $GOSEC_OUTPUT
+
+          Govulncheck Results:
+          $GOVULNCHECK_OUTPUT"
+          echo "::set-output name=msg::$COMMIT_MSG"
+
       - name: Update Nonprod deployment.yaml with new image tag
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          COMMIT_MESSAGE: ${{ steps.commit_message.outputs.msg }}
         run: |
           sed -i "s|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}|" ./overlays/nonprod/deployment.yaml
           git config --global user.name "lychees40"
           git config --global user.email "lychees40@users.noreply.github.com"
           git add ./overlays/nonprod/deployment.yaml
-          git commit -m "Update deployment.yaml with image tag ${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}"
+          git commit -m "${COMMIT_MESSAGE}"
           git push
