@@ -17,7 +17,6 @@ jobs:
 
     env:
       APP_NAME: ${{ vars.APP_NAME }}
-      COMMIT_ID_SHORT: ${{ github.sha }} # Will override in run step
 
     steps:
       - name: Checkout repository
@@ -33,6 +32,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      
       ## Can run in docker build as well we split better organization of steps ##
       ## For support more features like report, hook, conditional in CI/CD ##
       - name: Dependency check (Result will false cause the are no dependencies right now)
@@ -46,17 +46,18 @@ jobs:
         with:
           args: ./...
 
+      - name: Set COMMIT_ID_SHORT
+        id: vars
+        run: echo "COMMIT_ID_SHORT=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+
       - name: Build Docker image
-        env:
-          COMMIT_ID_SHORT: ${{ github.sha }}
         run: |
-          COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ github.ref_name }}-${{ substr(github.sha, 0, 7) }}
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -64,22 +65,16 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Push Docker image
-        env:
-          COMMIT_ID_SHORT: ${{ github.sha }}
         run: |
-          COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}
 
       - name: Update Nonprod deployment.yaml with new image tag
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          APP_NAME: ${{ vars.APP_NAME }}
-          COMMIT_ID_SHORT: ${{ github.sha }}
         run: |
-          COMMIT_ID_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          sed -i "s|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${COMMIT_ID_SHORT}|" ./overlays/nonprod/deployment.yaml
+          sed -i "s|image: .*$|image: ${{ secrets.DOCKER_USERNAME }}/${{ env.APP_NAME }}:${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}|" ./overlays/nonprod/deployment.yaml
           git config --global user.name "lychees40"
           git config --global user.email "lychees40@users.noreply.github.com"
           git add ./overlays/nonprod/deployment.yaml
-          git commit -m "Update deployment.yaml with image tag ${{ github.ref_name }}-${COMMIT_ID_SHORT}"
+          git commit -m "Update deployment.yaml with image tag ${{ github.ref_name }}-${{ env.COMMIT_ID_SHORT }}"
           git push
