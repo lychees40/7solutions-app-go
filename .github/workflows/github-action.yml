@@ -40,6 +40,8 @@ jobs:
         with:
           go-version-input: 1.22
           go-package: ./...
+          output-format: json
+          output-file: govulncheck-output.json
         id: govulncheck
 
       - name: Save Govulncheck Output
@@ -52,7 +54,7 @@ jobs:
       - name: Static code analysis
         uses: securego/gosec@master
         with:
-          args: ./...
+          args: '-fmt=json -out=gosec-report.json ./...'
         id: gosec
 
       - name: Save Gosec Output
