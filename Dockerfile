@@ -15,7 +15,8 @@ COPY . .
 RUN go build -o main .
 RUN CGO_ENABLED=0 go build -o main .
 # Stage 2: Create a smaller image to run the application
-FROM alpine:latest
+# Track version to ease to track the version of the base image
+FROM alpine:3.21
 
 # Install necessary packages
 
