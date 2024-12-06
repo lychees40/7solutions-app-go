@@ -1,6 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: basic-ingress
   annotations:
     external-dns.alpha.kubernetes.io/zone: public
     ingressClassName: gce
@@ -8,7 +9,6 @@ metadata:
     networking.gke.io/managed-certificates: helloworld-certificate
     networking.gke.io/v1beta1.FrontendConfig: helloworld-security-config
     networking.gke.io/v1beta1.GlobalBackendConfig: helloworld-backend-config
-  name: basic-ingress
 spec:
   rules:
     - host: helloworld.bar.com

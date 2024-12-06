@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helloworld-deployment
-  labels:
-    app: helloworld
 spec:
   replicas: 3
   selector:
@@ -14,14 +12,24 @@ spec:
       labels:
         app: helloworld
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: helloworld
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: helloworld-container
           image: lycheesgaseous/helloworld:develop-af66f0e
-          ports:
-            - containerPort: 8080
           securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
             runAsUser: 1000
-      imagePullSecrets:
-        - name: dockerhub-secret
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"

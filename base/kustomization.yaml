@@ -7,5 +7,6 @@ resources:
   - certificate.yaml
   - frontend.yaml
   - backend.yaml
+
 commonLabels:
   app: helloworld

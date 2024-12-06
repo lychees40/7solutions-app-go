@@ -14,9 +14,30 @@ spec:
       labels:
         app: helloworld
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - helloworld
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: helloworld-container
           image: lycheesgaseous/helloworld:v1.0.1
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
           ports:
             - containerPort: 8080
       imagePullSecrets:

@@ -32,7 +32,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
       ## Can run in docker build as well we split better organization of steps ##
       ## For support more features like report, hook, conditional in CI/CD ##
       - name: Dependency check (Result will false cause the are no dependencies right now)
