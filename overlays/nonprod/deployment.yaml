@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: helloworld-deployment
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: helloworld
@@ -13,7 +13,6 @@ spec:
         app: helloworld
     spec:
       affinity:
-        # For 1 non setup now
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100

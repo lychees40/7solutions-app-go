@@ -14,16 +14,6 @@ spec:
       labels:
         app: helloworld
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - helloworld
-              topologyKey: kubernetes.io/hostname
       containers:
         - name: helloworld-container
           image: lycheesgaseous/helloworld:v1.0.1
