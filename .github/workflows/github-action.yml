@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       ## Can run in docker build as well we split better organization of steps ##
       ## For support more features like report, hook, conditional in CI/CD ##
-      - name: Dependency check
+      - name: Dependency check (Result will false cause the are no dependencies right now)
         uses: golang/govulncheck-action@v1
         with:
           go-version-input: 1.21
